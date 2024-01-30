@@ -250,7 +250,7 @@ For further reading and tools to help with the development and understanding of 
 - **Jesse Pollak Cast**: Community Engagement and resources. [Read here](https://warpcast.com/jessepollak/0x06279b73)
 - **Frames Warpcast Channel**: Warpcast updates on Frames. [Visit channel](https://warpcast.com/~/channel/frames)
 - **XMTP Warpcast Channel**: XMTP updates. [Visit channel](https://warpcast.com/~/channel/xmtp)
-- **Neynar Docs**: Documentation for the Neynar API, useful for integrating user data with Frames. [Read the docs](https://docs.neynar.com/reference/user-bulk)
-- **How to Think About Frames**: An insightful article on conceptualizing and working with Frames. [Read article](https://medium.com/@decktonic/how-to-think-about-frames-07853d93a549)
+- **Neynar Docs**: Documentation for the Neynar API. [Read the docs](https://docs.neynar.com/reference/user-bulk)
+- **How to Think About Frames**: An insightful article. [Read article](https://medium.com/@decktonic/how-to-think-about-frames-07853d93a549)
 
 Special thanks to [Leonardo Zizzamia](https://github.com/Zizzamia) for providing the starter code with [A Frame in 100 Lines](https://github.com/Zizzamia/a-frame-in-100-lines).
