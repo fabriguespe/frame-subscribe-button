@@ -29,9 +29,9 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
         let conversation = await start_a_new_conversation(client, accountAddress);
         let message = await send_a_message(
           conversation,
-          `You're almost there! To complete your subscription and start receiving updates, please confirm your consent by clicking the link below:
-          https://fac9-2800-810-593-244-25a3-75bf-f64f-445c.ngrok-free.app/consent
-          This is a double opt-in process to ensure your privacy and consent are respected. Thank you for joining us!`,
+          `You're almost there! If you're viewing this in an inbox with portable consent, simply click the "Accept" button below to complete your subscription and start receiving updates. If the button doesn't appear, please confirm your consent by visiting the following link:\n
+          https://fac9-2800-810-593-244-25a3-75bf-f64f-445c.ngrok-free.app/consent\n
+          This ensures your privacy and consent are respected. Thank you for joining us!`,
         );
         console.log('Message sent:', message.id);
         returnMessage = 'Subscribed! Check your inbox for a confirmation link.';
