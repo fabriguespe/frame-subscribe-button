@@ -30,7 +30,7 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
         let message = await send_a_message(
           conversation,
           `You're almost there! If you're viewing this in an inbox with portable consent, simply click the "Accept" button below to complete your subscription and start receiving updates. If the button doesn't appear, please confirm your consent by visiting the following link:\n
-          https://fac9-2800-810-593-244-25a3-75bf-f64f-445c.ngrok-free.app/consent\n
+          https://xmtp-frame-subscribe-button.vercel.app/consent\n
           This ensures your privacy and consent are respected. Thank you for joining us!`,
         );
         console.log('Message sent:', message.id);
@@ -43,9 +43,9 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
 
   return new NextResponse(`<!DOCTYPE html><html><head>
     <meta property="fc:frame" content="vNext" />
-    <meta property="fc:frame:image" content="https://fac9-2800-810-593-244-25a3-75bf-f64f-445c.ngrok-free.app/banner.jpeg" />
+    <meta property="fc:frame:image" content="https://xmtp-frame-subscribe-button.vercel.app/banner.jpeg" />
     <meta property="fc:frame:button:1" content="${returnMessage}" />
-    <meta property="fc:frame:post_url" content="https://fac9-2800-810-593-244-25a3-75bf-f64f-445c.ngrok-free.app/api/frame" />
+    <meta property="fc:frame:post_url" content="https://xmtp-frame-subscribe-button.vercel.app/api/frame" />
   </head></html>`);
 }
 
