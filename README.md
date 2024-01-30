@@ -1,4 +1,4 @@
-# XMTP Subscribe Button Tutorial
+# Subscribe Button Frame with XMTP Consent
 
 This tutorial will guide you through the process of creating a frame, the first opt-in message, and a subscribe button for consent confirmation using the XMTP network.
 
