@@ -241,6 +241,16 @@ yarn install
 yarn dev
 ```
 
-### Acknowledgements
+## Resources
+
+For further reading and tools to help with the development and understanding of Frames, the following resources are invaluable:
+
+- **Farcaster Frames**: Official Farcaster Documentation. [Read more](https://www.notion.so/xmtplabs/Frames-are-a-good-idea-9c406517c2ed4da09b2fbf6493695787)
+- **Frame Embeds Tool**: Tool for testing frames in development. [Explore](https://warpcast.com/~/developers/embeds)
+- **Jesse Pollak Cast**: Community Engagement and resources. [Read here](https://warpcast.com/jessepollak/0x06279b73)
+- **Frames Warpcast Channel**: A dedicated channel for discussions and updates on Frames. [Visit channel](https://warpcast.com/~/channel/frames)
+- **XMTP Warpcast Channel**: A dedicated channel for discussions and updates on Frames. [Visit channel](https://warpcast.com/~/channel/xmtp)
+- **Neynar Docs**: Documentation for the Neynar API, useful for integrating user data with Frames. [Read the docs](https://docs.neynar.com/reference/user-bulk)
+- **How to Think About Frames**: An insightful article on conceptualizing and working with Frames. [Read article](https://medium.com/@decktonic/how-to-think-about-frames-07853d93a549)
 
 Special thanks to [Leonardo Zizzamia](https://github.com/Zizzamia) for providing the starter code with [A Frame in 100 Lines](https://github.com/Zizzamia/a-frame-in-100-lines).

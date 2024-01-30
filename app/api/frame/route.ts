@@ -7,18 +7,16 @@ import { createClient } from 'redis';
 const isDevelopment = process.env.NODE_ENV !== 'production';
 // Use ngrok URL for API calls if in development, otherwise use prod URL
 const apiUrl = isDevelopment ? process.env.NEXT_PUBLIC_NGROK_URL : process.env.NEXT_PUBLIC_PROD_URL;
-
+// Create and connect the client
+const redisClient = createClient({
+  url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
+  password: process.env.REDIS_PASSWORD, // Assuming your password is stored in an environment variable
+});
+await redisClient.connect();
+await redisClient.flushDb();
 console.log(`Is development: ${isDevelopment} - ${apiUrl}`);
 // Function to handle the response
 async function getResponse(req: NextRequest): Promise<NextResponse> {
-  // Get the clicked button
-  // Create and connect the client
-  const redisClient = createClient({
-    url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
-    password: process.env.REDIS_PASSWORD, // Assuming your password is stored in an environment variable
-  });
-  await redisClient.connect();
-
   // Initialize variables
   let accountAddress = '';
   let returnMessage = '';
@@ -75,7 +73,7 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
           returnMessage = 'Subscribed! Check your inbox for a confirmation link.';
           sendMessage(
             conversation,
-            `You're almost there! If you're viewing this in an inbox with portable consent, simply click the "Accept" button below to complete your subscription and start receiving updates. If the button doesn't appear, please confirm your consent by visiting the following link:\n${apiUrl}/consent\nThis ensures your privacy and consent are respected. Thank you for joining us!`,
+            `You're almost there! If you're viewing this in an inbox with portable consent, simply click the "Accept" button below to complete your subscription and start receiving updates. If the button doesn't appear, please confirm your consent by visiting the following link:\n\n\n${apiUrl}/consent\n\nThis ensures your privacy and consent are respected. Thank you for joining us!`,
           );
         } else returnMessage = 'Address is not on the XMTP network. ';
       }
