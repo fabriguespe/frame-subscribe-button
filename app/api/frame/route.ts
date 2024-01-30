@@ -18,7 +18,7 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
           api_key: process.env.NEYNAR_API_KEY as string,
         },
       });
-      const data = await response.json();
+      const data = (await response.json()) as any;
       const user = data.users[0];
       accountAddress = user.verifications[0]; // Assuming the address is the first item in the 'verifications' array
       if (!accountAddress) returnMessage = 'No address found';
