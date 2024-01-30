@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fetch from 'node-fetch';
 import { Wallet } from 'ethers';
-import { Client } from 'xmtp-js-server';
+import { Client } from '@xmtp/xmtp-js';
 import { createClient } from 'redis';
+
 // Detect if we are in development
 const isDevelopment = process.env.NODE_ENV !== 'production';
 // Use ngrok URL for API calls if in development, otherwise use prod URL
