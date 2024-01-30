@@ -2,18 +2,46 @@ import { NextRequest, NextResponse } from 'next/server';
 import fetch from 'node-fetch';
 import { Wallet } from 'ethers';
 import { Client } from 'xmtp-js-server';
+import { createClient } from 'redis';
+// Detect if we are in development
+const isDevelopment = process.env.NODE_ENV !== 'production';
+// Use ngrok URL for API calls if in development, otherwise use prod URL
+const apiUrl = isDevelopment ? process.env.NEXT_PUBLIC_NGROK_URL : process.env.NEXT_PUBLIC_PROD_URL;
 
+console.log(`Is development: ${isDevelopment} - ${apiUrl}`);
 // Function to handle the response
 async function getResponse(req: NextRequest): Promise<NextResponse> {
+  // Get the clicked button
+  // Create and connect the client
+  const redisClient = createClient({
+    url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
+    password: process.env.REDIS_PASSWORD, // Assuming your password is stored in an environment variable
+  });
+  await redisClient.connect();
+
   // Initialize variables
   let accountAddress = '';
   let returnMessage = '';
-  console.log('Request:', req);
   try {
     // Parse the request body
+    /*try {
+      // Step 2. Read the body from the Next Request
+      const body: FrameRequest = await req.json();
+      console.log('Frame Request:', body);
+      // Step 3. Get from the body the Account Address of the user using the Frame
+      accountAddress = await getFrameAccountAddress(body, {
+        NEYNAR_API_KEY: process.env.NEYNAR_API_KEY as string,
+      });
+    } catch (err) {
+      console.error(err);
+    }*/
+
+    console.log(`Account address: ${accountAddress}`);
     const body: { untrustedData?: { fid?: number } } = await req.json();
     const fid = body.untrustedData?.fid;
+    const buttonIndex = body.untrustedData?.buttonIndex;
     if (fid) {
+      console.log('buttonIndex:', buttonIndex);
       console.log('Farcaster Id:', fid);
       // Fetch user data from the API
       const response = await fetch(`https://api.neynar.com/v2/farcaster/user/bulk?fids=${fid}`, {
@@ -29,22 +57,28 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
       // Get the account address from the user verifications
       accountAddress = user.verifications[0]; // Assuming the address is the first item in the 'verifications' array
       if (!accountAddress) returnMessage = 'No address found';
-      // Initialize the wallet and client
-      let wallet = await initialize_the_wallet();
-      let client = await create_a_client(wallet);
-      // Check if the account address is on the network
-      let isOnNetwork = await check_if_an_address_is_on_the_network(client, accountAddress);
-      if (isOnNetwork) {
-        // Start a new conversation and send a message
-        let conversation = await start_a_new_conversation(client, accountAddress);
-        returnMessage = 'Subscribed! Check your inbox for a confirmation link.';
-        send_a_message(
-          conversation,
-          `You're almost there! If you're viewing this in an inbox with portable consent, simply click the "Accept" button below to complete your subscription and start receiving updates. If the button doesn't appear, please confirm your consent by visiting the following link:\n
-          ${process.env.NEXT_PUBLIC_PROD_URL}/consent\n
-          This ensures your privacy and consent are respected. Thank you for joining us!`,
-        );
-      } else returnMessage = 'Address is not on the XMTP network. Sign in';
+      console.log(`Account address: ${accountAddress}`);
+      const isAlreadySubscribed = await redisClient.get(accountAddress);
+      console.log(`Is already subscribed: ${isAlreadySubscribed}`);
+      if (isAlreadySubscribed) {
+        returnMessage = 'You are already subscribed';
+      } else {
+        redisClient.set(accountAddress, 'subscribed');
+        // Initialize the wallet and client
+        let wallet = await initialize_the_wallet();
+        let client = await create_a_client(wallet);
+        // Check if the account address is on the network
+        let isOnNetwork = await check_if_an_address_is_on_the_network(client, accountAddress);
+        if (isOnNetwork) {
+          // Start a new conversation and send a message
+          let conversation = await start_a_new_conversation(client, accountAddress);
+          returnMessage = 'Subscribed! Check your inbox for a confirmation link.';
+          send_a_message(
+            conversation,
+            `You're almost there! If you're viewing this in an inbox with portable consent, simply click the "Accept" button below to complete your subscription and start receiving updates. If the button doesn't appear, please confirm your consent by visiting the following link:\n${apiUrl}/consent\nThis ensures your privacy and consent are respected. Thank you for joining us!`,
+          );
+        } else returnMessage = 'Address is not on the XMTP network. ';
+      }
     }
   } catch (err) {
     // Log any errors
@@ -55,7 +89,7 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
     <meta property="fc:frame" content="vNext" />
     <meta property="fc:frame:image" content="${process.env.NEXT_PUBLIC_PROD_URL}/banner.jpeg" />
     <meta property="fc:frame:button:1" content="${returnMessage}" />
-    <meta property="fc:frame:post_url" content="${process.env.NEXT_PUBLIC_NGROK_URL}/api/frame" />
+    <meta property="fc:frame:post_url" content="${apiUrl}/api/frame" />
   </head></html>`);
 }
 

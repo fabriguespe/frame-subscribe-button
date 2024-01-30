@@ -1,9 +1,10 @@
 # XMTP Subscribe Button Tutorial
 
-This tutorial will guide you through the process of creating a frame, the first opt-in message, and a subscribe button for consent confirmation using the XMTP (Cross Messaging Transaction Protocol) framework.
+This tutorial will guide you through the process of creating a frame, the first opt-in message, and a subscribe button for consent confirmation using the XMTP network.
 
 <details>
 <summary><h3>Prerequisites</h3></summary>
+This guide will provide you with the initial steps necessary to embark on your journey.
 
 #### Environment Variables
 
@@ -29,9 +30,9 @@ Remember to replace the values with your actual keys and URLs. Never share your 
 
 To set up a localhost url that you can test with the [Frames Embeds Tool](https://warpcast.com/~/developers/embeds) you can use the servie Ngrok. Thi swill generate a public URL that forwards actions to your localhost.
 
-First [Signup up](ngrok.com) to grok
+1. [Signup up](ngrok.com) to grok.
 
-OSX:
+2. Example in OSX:
 
 ```jsx
 brew install ngrok/ngrok/ngrok
@@ -39,11 +40,21 @@ ngrok authtoken <your_auth_token>
 ngrok http 3000
 ```
 
+#### Libraries & APIs
+
+This project uses several libraries that are specified in the `package.json` file. Here's a brief description of each:
+
+- `@xmtp/xmtp-js`: This is the XMTP SDK, used for interacting with the XMTP network.
+- `Neynar API`: Uses for getting the users data associadted with a Farcaster Id.
+- `@coinbase/onchainkit`: This library is used for interacting with the OnChainKit API.
+- `ethers`: This is a library for interacting with the Ethereum blockchain.
+- `xmtp-js-server`: This is a previous version of the XMTP JS SDK that is compatible with server-side operations.
+
 </details>
 
 ### Step 1: Create a Frame
 
-A frame is a container for your XMTP application. It's defined in the app/page.tsx file. Here's how to create it:
+A frame is a container for your XMTP application, utilizing the `@coinbase/onchainkit` for metadata handling. For more information on OnChainKit, visit [Coinbase OnChainKit Documentation](https://github.com/coinbase/onchainkit). It's defined in the `app/page.tsx` file. Here's how to create it:
 
 ```jsx
 import { getFrameMetadata } from '@coinbase/onchainkit';
@@ -70,7 +81,7 @@ export const metadata: Metadata = {
 export default function Page() {
   return (
     <>
-      <h1>XMTP Consent</h1>
+      <h1>XMTP Subscribe Button</h1>
     </>
   );
 }
@@ -80,108 +91,151 @@ This will render the XMTP frame with the Subscribe button
 
 ![](/public/print1.png)
 
-### Step 2: Create the First Opt-In Message
+### Step 2: Create an API endpoint
 
-The first opt-in message is sent when a user subscribes. This is handled in the app/api/frame/route.ts file:
+To set up an API route in Next.js for handling XMTP subscription requests, you'll need to create a new file in the `pages/api` directory. This file will contain the logic for your API endpoint. For example, to create an API route at `/api/frame`, you would create a file named `route.ts` inside a folder named `frame` within the `pages/api` directory. Here's a simple setup to get you started:
+
+Note: To utilize this function, we rely on Neynar APIs. In order to avoid rate limiting, please ensure that you have your own API KEY. Sign up [here](https://neynar.com).
 
 ```jsx
+// Example of the getResponse function, ensure it's defined or imported
 async function getResponse(req: NextRequest): Promise<NextResponse> {
-let accountAddress = '';
-let returnMessage = '';
-try {
-  const body: { untrustedData?: { fid?: number } } = await req.json();
-  const fid = body.untrustedData?.fid;
-  if (fid) {
-    console.log('FID:', fid);
-    const response = await fetch(`https://api.neynar.com/v2/farcaster/user/bulk?fids=${fid}`, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-        api_key: process.env.NEYNAR_API_KEY as string,
-      },
-    });
-    const data = (await response.json()) as any;
-    const user = data.users[0];
-    accountAddress = user.verifications[0]; // Assuming the address is the first item in the 'verifications' array
-    if (!accountAddress) returnMessage = 'No address found';
-    let wallet = await initialize_the_wallet_from_key();
-    let client = await create_a_client(wallet);
-    let isOnNetwork = await check_if_an_address_is_on_the_network(client, accountAddress);
-    if (isOnNetwork) {
-      let conversation = await start_a_new_conversation(client, accountAddress);
-      let message = await send_a_message(
-        conversation,
-        `You're almost there! To complete your subscription and start receiving updates, please confirm your consent by clicking the link below:
-        https://xmtp-frame-subscribe-button.vercel.app/consent
-        This is a double opt-in process to ensure your privacy and consent are respected. Thank you for joining us!`,
-      );
-      console.log('Message sent:', message.id);
-      returnMessage = 'Subscribed! Check your (request) inbox for a confirmation link.';
-    } else returnMessage = 'Address is not on the XMTP network. Sign in';
+  // Your existing logic for handling the request
+  // This is where you would interact with XMTP, parse the request, etc.
+  return new NextResponse('Frame Buttons');
+}
+
+export async function POST(req: NextRequest): Promise<Response> {
+  return getResponse(req);
+}
+```
+
+### Step 3: Extracting account address and button index
+
+According to the Farcaster Frames documentation, when a user clicks a button in a frame, Warpcast sends a POST request containing both trusted and untrusted data. For simplicity and security, we'll focus on using the untrusted data, which includes the user's `Farcaster ID` and the `button index`. Here's how you can modify your getResponse function to extract the account address and button index from the received data:
+
+This is an axample request:
+
+```json
+Frame Request: {
+  untrustedData: {
+    fid: 10952,
+    buttonIndex: 1,
+    castId: { fid: 10952, hash: '0x0000000000000000000000000000000000000001' }
   }
 }
 ```
 
-### Step 3: Create the Subscribe Button for Consent Confirmation
-
-The subscribe button is created in the pages/consent.tsx file. When clicked, it triggers the consent process:
-
 ```jsx
-export function Consent() {
-  ...
-  // Define the handleClick function
-  const handleClick = async () => {
-    try {
-      // Set loading to true
-      setLoading(true);
-      // Get the subscriber
-      let wallet = await connectWallet();
-      let client = await Client.create(wallet, { env: process.env.NEXT_PUBLIC_XMTP_ENV });
-      console.log(client.address);
-      // Refresh the consent list to make sure your application is up-to-date with the
-      await client.contacts.refreshConsentList();
+const body: { untrustedData?: { fid?: number, buttonIndex?: number } } = await req.json();
+const fid = body.untrustedData?.fid;
+const buttonIndex = body.untrustedData?.buttonIndex;
 
-      // Get the consent state of the subscriber
-      let state = client.contacts.consentState(client.address);
+// Fetch user data from the Neynar API using the Farcaster ID (fid)
+const response = await fetch(`https://api.neynar.com/v2/farcaster/user/bulk?fids=${fid}`, {
+  method: 'GET',
+  headers: {
+    Accept: 'application/json',
+    'api_key': process.env.NEYNAR_API_KEY as string,
+  },
+});
+const data = await response.json();
+const user = data.users[0];
 
-      // If the state is unknown or blocked, allow the subscriber
-      if (state === 'unknown' || state === 'denied') {
-        state = 'allowed';
-        await client.contacts.allow([client.address]);
-      } else if (state === 'allowed') {
-        state = 'denied';
-        await client.contacts.deny([client.address]);
-      }
-
-      // Set the subscription label
-      setSubscriptionStatus('Consent State: ' + state);
-
-      // Set loading to false
-      setLoading(false);
-    } catch (error) {
-      // Log the error
-      console.log(error);
-    }
-  };
-
-  return (
-    <div
-      style={styles.SubscribeButtonContainer}
-      className={`Subscribe ${loading ? 'loading' : ''}`}
-    >
-      <p></p>
-      <p>By clicking the button, you are providing double opt-in consent for us to contact you.</p>
-      <button style={styles.SubscribeButton} onClick={handleClick}>
-        {loading ? 'Loading... ' : subscriptionStatus}
-      </button>
-    </div>
-  );
-}
+// Assuming the account address is the first item in the 'verifications' array
+accountAddress = user.verifications[0];
 ```
 
-### Step 4: Run the Application
+### Step 3: Managing Frame State
+
+1. Check if the user is already subscribed:
+
+   - If the user is already subscribed in localDB, the button will return "You are already subscribed".
+   - If the user is not subscribed, proceed to the next step.
+
+2. Check if the account address is on the XMTP network:
+
+   - If the address is not on the XMTP network, the button will return "Address is not on the XMTP network".
+   - If the address is on the XMTP network, proceed to the next step.
+
+3. Subscribe the user and send the first opt-in message:
+
+- Set the user's account address as 'subscribed' in the Redis database.
+- Start a new conversation with the user's account address using the XMTP client.
+- Send a message to the user with a link for consent confirmation.
+- The button will return "Subscribed! Check your inbox for a confirmation link.
+
+### Step 3: Create the First Opt-In Message
+
+The first opt-in message is sent when a user subscribes. This is handled in the app/api/frame/route.ts file:
+
+```jsx
+// Initialize the wallet and client
+let wallet = await initialize_the_wallet();
+let client = await create_a_client(wallet);
+// Check if the account address is on the network
+let isOnNetwork = await check_if_an_address_is_on_the_network(client, accountAddress);
+if (isOnNetwork) {
+  // Start a new conversation and send a message
+  let conversation = await start_a_new_conversation(client, accountAddress);
+  returnMessage = 'Subscribed! Check your inbox for a confirmation link.';
+  send_a_message(
+    conversation,
+    `You're almost there! If you're viewing this in an inbox with portable consent, simply click the "Accept" button below to complete your subscription and start receiving updates. If the button doesn't appear, please confirm your consent by visiting the following link:\n
+    ${apiUrl}/consent\n
+    This ensures your privacy and consent are respected. Thank you for joining us!`,
+  );
+} else returnMessage = 'Address is not on the XMTP network. ';
+```
+
+### Step 3: Create the Subscribe Button for Consent Confirmation
+
+The subscribe button, which is created in the `pages/consent.tsx` file, is a fundamental component in the user consent process as outlined in the XMTP documentation on [user consent](https://xmtp.org/docs/build/user-consent). When clicked, this button initiates the consent process, marking the second step in the double opt-in mechanism and ensuring that users explicitly agree to receive communications.
+
+```jsx
+// Define the handleClick function
+const handleClick = async () => {
+  try {
+    // Set loading to true
+    setLoading(true);
+    // Get the subscriber
+    let wallet = await connectWallet();
+    let client = await Client.create(wallet, { env: process.env.NEXT_PUBLIC_XMTP_ENV });
+    console.log(client.address);
+    // Refresh the consent list to make sure your application is up-to-date with the
+    await client.contacts.refreshConsentList();
+
+    // Get the consent state of the subscriber
+    let state = client.contacts.consentState(client.address);
+
+    // If the state is unknown or blocked, allow the subscriber
+    if (state === 'unknown' || state === 'denied') {
+      state = 'allowed';
+      await client.contacts.allow([client.address]);
+    } else if (state === 'allowed') {
+      state = 'denied';
+      await client.contacts.deny([client.address]);
+    }
+
+    // Set the subscription label
+    setSubscriptionStatus('Consent State: ' + state);
+
+    // Set loading to false
+    setLoading(false);
+  } catch (error) {
+    // Log the error
+    console.log(error);
+  }
+};
+```
+
+### Step 4: Run the Frame in localhost
 
 ```bash
 yarn install
 yarn dev
 ```
+
+## Acknowledgements
+
+Special thanks to [Leonardo Zizzamia](https://github.com/Zizzamia) for providing the starter code with [A Frame in 100 Lines](https://github.com/Zizzamia/a-frame-in-100-lines).
