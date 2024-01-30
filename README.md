@@ -163,10 +163,10 @@ accountAddress = user.verifications[0];
 
 3. Subscribe the user and send the first opt-in message:
 
-- Set the user's account address as 'subscribed' in the Redis database.
-- Start a new conversation with the user's account address using the XMTP client.
-- Send a message to the user with a link for consent confirmation.
-- The button will return "Subscribed! Check your inbox for a confirmation link.
+   - Set the user's account address as 'subscribed' in the Redis database.
+   - Start a new conversation with the user's account address using the XMTP client.
+   - Send a message to the user with a link for consent confirmation.
+   - The button will return "Subscribed! Check your inbox for a confirmation link.
 
 ### Step 4: Create the First Opt-In Message
 
