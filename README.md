@@ -2,6 +2,22 @@
 
 This tutorial will guide you through the process of creating a frame, the first opt-in message, and a subscribe button for consent confirmation using the XMTP (Cross Messaging Transaction Protocol) framework.
 
+## Prerequisites
+
+### Setting Up with Ngrok
+
+To set up a localhost url that you can test with the [Frames Debugger](https://warpcast.com/~/developers/embeds) you can use the servie Ngrok. Thi swill generate a public URL that forwards actions to your localhost.
+
+First Signup up to grok
+
+OSX:
+
+```jsx
+brew install ngrok/ngrok/ngrok
+ngrok authtoken <your_auth_token>
+ngrok http 3000
+```
+
 ### Step 1: Create a Frame
 
 A frame is a container for your XMTP application. It's defined in the app/page.tsx file. Here's how to create it:
@@ -74,7 +90,7 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
           This is a double opt-in process to ensure your privacy and consent are respected. Thank you for joining us!`,
         );
         console.log('Message sent:', message.id);
-        returnMessage = 'Subscribed! Check your inbox for a confirmation link.';
+        returnMessage = 'Subscribed! Check your (request) inbox for a confirmation link.';
       } else returnMessage = 'Address is not on the XMTP network. Sign in';
     }
   }
