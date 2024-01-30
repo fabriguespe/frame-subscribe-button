@@ -248,8 +248,8 @@ For further reading and tools to help with the development and understanding of 
 - **Farcaster Frames**: Official Farcaster Documentation. [Read more](https://www.notion.so/xmtplabs/Frames-are-a-good-idea-9c406517c2ed4da09b2fbf6493695787)
 - **Frame Embeds Tool**: Tool for testing frames in development. [Explore](https://warpcast.com/~/developers/embeds)
 - **Jesse Pollak Cast**: Community Engagement and resources. [Read here](https://warpcast.com/jessepollak/0x06279b73)
-- **Frames Warpcast Channel**: A dedicated channel for discussions and updates on Frames. [Visit channel](https://warpcast.com/~/channel/frames)
-- **XMTP Warpcast Channel**: A dedicated channel for discussions and updates on Frames. [Visit channel](https://warpcast.com/~/channel/xmtp)
+- **Frames Warpcast Channel**: Warpcast updates on Frames. [Visit channel](https://warpcast.com/~/channel/frames)
+- **XMTP Warpcast Channel**: XMTP updates. [Visit channel](https://warpcast.com/~/channel/xmtp)
 - **Neynar Docs**: Documentation for the Neynar API, useful for integrating user data with Frames. [Read the docs](https://docs.neynar.com/reference/user-bulk)
 - **How to Think About Frames**: An insightful article on conceptualizing and working with Frames. [Read article](https://medium.com/@decktonic/how-to-think-about-frames-07853d93a549)
 
