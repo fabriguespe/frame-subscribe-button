@@ -3,8 +3,8 @@ import type { Metadata } from 'next';
 
 const frameMetadata = getFrameMetadata({
   buttons: ['Subscribe via XMTP'],
-  image: process.env.NEXT_PUBLIC_IMAGES_URL + '/banner.jpeg',
-  post_url: process.env.NEXT_PUBLIC_API_URL + '/api/frame',
+  image: process.env.NEXT_PUBLIC_PROD_URL + '/banner.jpeg',
+  post_url: process.env.NEXT_PUBLIC_NGROK_URL + '/api/frame',
 });
 export const metadata: Metadata = {
   title: 'XMTP.org',
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'XMTP.org',
     description: 'LFG',
-    images: [process.env.NEXT_PUBLIC_IMAGES_URL + '/banner.jpeg'],
+    images: [process.env.NEXT_PUBLIC_PROD_URL + '/banner.jpeg'],
   },
   other: {
     ...frameMetadata,

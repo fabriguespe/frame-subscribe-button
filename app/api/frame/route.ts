@@ -41,7 +41,7 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
         send_a_message(
           conversation,
           `You're almost there! If you're viewing this in an inbox with portable consent, simply click the "Accept" button below to complete your subscription and start receiving updates. If the button doesn't appear, please confirm your consent by visiting the following link:\n
-          ${process.env.NEXT_PUBLIC_API_URL}/consent\n
+          ${process.env.NEXT_PUBLIC_PROD_URL}/consent\n
           This ensures your privacy and consent are respected. Thank you for joining us!`,
         );
       } else returnMessage = 'Address is not on the XMTP network. Sign in';
@@ -53,9 +53,9 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
   // Return the response
   return new NextResponse(`<!DOCTYPE html><html><head>
     <meta property="fc:frame" content="vNext" />
-    <meta property="fc:frame:image" content="${process.env.NEXT_PUBLIC_IMAGES_URL}/banner.jpeg" />
+    <meta property="fc:frame:image" content="${process.env.NEXT_PUBLIC_PROD_URL}/banner.jpeg" />
     <meta property="fc:frame:button:1" content="${returnMessage}" />
-    <meta property="fc:frame:post_url" content="${process.env.NEXT_PUBLIC_API_URL}/api/frame" />
+    <meta property="fc:frame:post_url" content="${process.env.NEXT_PUBLIC_NGROK_URL}/api/frame" />
   </head></html>`);
 }
 
