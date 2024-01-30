@@ -53,46 +53,50 @@ export default function Page() {
 }
 ```
 
+This will render the XMTP frame with the Subscribe button
+
+![](/public/print1.png)
+
 ### Step 2: Create the First Opt-In Message
 
 The first opt-in message is sent when a user subscribes. This is handled in the app/api/frame/route.ts file:
 
 ```jsx
 async function getResponse(req: NextRequest): Promise<NextResponse> {
-  let accountAddress = '';
-  let returnMessage = '';
-  try {
-    const body: { untrustedData?: { fid?: number } } = await req.json();
-    const fid = body.untrustedData?.fid;
-    if (fid) {
-      console.log('FID:', fid);
-      const response = await fetch(`https://api.neynar.com/v2/farcaster/user/bulk?fids=${fid}`, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          api_key: process.env.NEYNAR_API_KEY as string,
-        },
-      });
-      const data = (await response.json()) as any;
-      const user = data.users[0];
-      accountAddress = user.verifications[0]; // Assuming the address is the first item in the 'verifications' array
-      if (!accountAddress) returnMessage = 'No address found';
-      let wallet = await initialize_the_wallet_from_key();
-      let client = await create_a_client(wallet);
-      let isOnNetwork = await check_if_an_address_is_on_the_network(client, accountAddress);
-      if (isOnNetwork) {
-        let conversation = await start_a_new_conversation(client, accountAddress);
-        let message = await send_a_message(
-          conversation,
-          `You're almost there! To complete your subscription and start receiving updates, please confirm your consent by clicking the link below:
-          https://xmtp-frame-subscribe-button.vercel.app/consent
-          This is a double opt-in process to ensure your privacy and consent are respected. Thank you for joining us!`,
-        );
-        console.log('Message sent:', message.id);
-        returnMessage = 'Subscribed! Check your (request) inbox for a confirmation link.';
-      } else returnMessage = 'Address is not on the XMTP network. Sign in';
-    }
+let accountAddress = '';
+let returnMessage = '';
+try {
+  const body: { untrustedData?: { fid?: number } } = await req.json();
+  const fid = body.untrustedData?.fid;
+  if (fid) {
+    console.log('FID:', fid);
+    const response = await fetch(`https://api.neynar.com/v2/farcaster/user/bulk?fids=${fid}`, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        api_key: process.env.NEYNAR_API_KEY as string,
+      },
+    });
+    const data = (await response.json()) as any;
+    const user = data.users[0];
+    accountAddress = user.verifications[0]; // Assuming the address is the first item in the 'verifications' array
+    if (!accountAddress) returnMessage = 'No address found';
+    let wallet = await initialize_the_wallet_from_key();
+    let client = await create_a_client(wallet);
+    let isOnNetwork = await check_if_an_address_is_on_the_network(client, accountAddress);
+    if (isOnNetwork) {
+      let conversation = await start_a_new_conversation(client, accountAddress);
+      let message = await send_a_message(
+        conversation,
+        `You're almost there! To complete your subscription and start receiving updates, please confirm your consent by clicking the link below:
+        https://xmtp-frame-subscribe-button.vercel.app/consent
+        This is a double opt-in process to ensure your privacy and consent are respected. Thank you for joining us!`,
+      );
+      console.log('Message sent:', message.id);
+      returnMessage = 'Subscribed! Check your (request) inbox for a confirmation link.';
+    } else returnMessage = 'Address is not on the XMTP network. Sign in';
   }
+}
 ```
 
 ### Step 3: Create the Subscribe Button for Consent Confirmation

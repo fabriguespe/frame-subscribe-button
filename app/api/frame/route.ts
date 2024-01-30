@@ -3,15 +3,19 @@ import fetch from 'node-fetch';
 import { Wallet } from 'ethers';
 import { Client } from 'xmtp-js-server';
 
+// Function to handle the response
 async function getResponse(req: NextRequest): Promise<NextResponse> {
+  // Initialize variables
   let accountAddress = '';
   let returnMessage = '';
   console.log('Request:', req);
   try {
+    // Parse the request body
     const body: { untrustedData?: { fid?: number } } = await req.json();
     const fid = body.untrustedData?.fid;
     if (fid) {
       console.log('Farcaster Id:', fid);
+      // Fetch user data from the API
       const response = await fetch(`https://api.neynar.com/v2/farcaster/user/bulk?fids=${fid}`, {
         method: 'GET',
         headers: {
@@ -19,14 +23,19 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
           api_key: process.env.NEYNAR_API_KEY as string,
         },
       });
+      // Parse the response data
       const data = await response.json();
       const user = data.users[0];
+      // Get the account address from the user verifications
       accountAddress = user.verifications[0]; // Assuming the address is the first item in the 'verifications' array
       if (!accountAddress) returnMessage = 'No address found';
+      // Initialize the wallet and client
       let wallet = await initialize_the_wallet();
       let client = await create_a_client(wallet);
+      // Check if the account address is on the network
       let isOnNetwork = await check_if_an_address_is_on_the_network(client, accountAddress);
       if (isOnNetwork) {
+        // Start a new conversation and send a message
         let conversation = await start_a_new_conversation(client, accountAddress);
         returnMessage = 'Subscribed! Check your inbox for a confirmation link.';
         send_a_message(
@@ -38,8 +47,10 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
       } else returnMessage = 'Address is not on the XMTP network. Sign in';
     }
   } catch (err) {
+    // Log any errors
     console.error(err);
   }
+  // Return the response
   return new NextResponse(`<!DOCTYPE html><html><head>
     <meta property="fc:frame" content="vNext" />
     <meta property="fc:frame:image" content="${process.env.NEXT_PUBLIC_IMAGES_URL}/banner.jpeg" />
@@ -67,9 +78,7 @@ async function initialize_the_wallet() {
 //Send a message
 async function send_a_message(conversation, content) {
   if (conversation) {
-    const message = await conversation.send(content);
-    console.log(`Message sent: "${message.content}"`);
-    return message;
+    conversation.send(content);
   }
 }
 
