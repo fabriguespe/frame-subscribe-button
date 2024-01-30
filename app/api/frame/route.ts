@@ -6,6 +6,7 @@ import { Client } from '@xmtp/xmtp-js';
 async function getResponse(req: NextRequest): Promise<NextResponse> {
   let accountAddress = '';
   let returnMessage = '';
+  console.log('Request:', req);
   try {
     const body: { untrustedData?: { fid?: number } } = await req.json();
     const fid = body.untrustedData?.fid;
@@ -45,7 +46,7 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
     <meta property="fc:frame" content="vNext" />
     <meta property="fc:frame:image" content="https://xmtp-frame-subscribe-button.vercel.app/banner.jpeg" />
     <meta property="fc:frame:button:1" content="${returnMessage}" />
-    <meta property="fc:frame:post_url" content="https://xmtp-frame-subscribe-button.vercel.app/api/frame" />
+    <meta property="fc:frame:post_url" content="https://fac9-2800-810-593-244-25a3-75bf-f64f-445c.ngrok-free.app/api/frame" />
   </head></html>`);
 }
 
