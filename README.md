@@ -29,7 +29,7 @@ import type { Metadata } from 'next';
 const frameMetadata = getFrameMetadata({
   buttons: ['Subscribe via XMTP'],
   image: 'https://xmtp-frame-subscribe-button.vercel.app/banner.jpeg',
-  post_url: 'https://xmtp-frame-subscribe-button.vercel.app/api/frame',
+  post_url: ' https://amazed-hedgehog-actual.ngrok-free.app/api/frame',
 });
 
 export const metadata: Metadata = {
