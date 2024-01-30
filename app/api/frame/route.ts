@@ -65,15 +65,15 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
       } else {
         redisClient.set(accountAddress, 'subscribed');
         // Initialize the wallet and client
-        let wallet = await initialize_the_wallet();
-        let client = await create_a_client(wallet);
+        let wallet = await initializeWallet();
+        let client = await createXMTPClient(wallet);
         // Check if the account address is on the network
-        let isOnNetwork = await check_if_an_address_is_on_the_network(client, accountAddress);
-        if (isOnNetwork) {
+        let isOnNetwork = await checkAddressIsOnNetwork(client, accountAddress);
+        if (isOnNetwork === true) {
           // Start a new conversation and send a message
-          let conversation = await start_a_new_conversation(client, accountAddress);
+          let conversation = await newConversation(client, accountAddress);
           returnMessage = 'Subscribed! Check your inbox for a confirmation link.';
-          send_a_message(
+          sendMessage(
             conversation,
             `You're almost there! If you're viewing this in an inbox with portable consent, simply click the "Accept" button below to complete your subscription and start receiving updates. If the button doesn't appear, please confirm your consent by visiting the following link:\n${apiUrl}/consent\nThis ensures your privacy and consent are respected. Thank you for joining us!`,
           );
@@ -102,7 +102,7 @@ async function initialize_the_wallet_from_key() {
 }
 
 //Initialize the wallet
-async function initialize_the_wallet() {
+async function initializeWallet() {
   // You'll want to replace this with a wallet from your application
   let wallet = Wallet.createRandom();
   console.log(`Wallet address: ${wallet.address}`);
@@ -110,14 +110,14 @@ async function initialize_the_wallet() {
 }
 
 //Send a message
-async function send_a_message(conversation, content) {
+async function sendMessage(conversation, content) {
   if (conversation) {
     conversation.send(content);
   }
 }
 
 // Create a client
-async function create_a_client(wallet) {
+async function createXMTPClient(wallet) {
   if (!wallet) {
     console.log('Wallet is not initialized');
     return;
@@ -129,7 +129,7 @@ async function create_a_client(wallet) {
 }
 
 //Check if an address is on the network
-async function check_if_an_address_is_on_the_network(xmtp, accountAddress) {
+async function checkAddressIsOnNetwork(xmtp, accountAddress) {
   if (xmtp) {
     const isOnDevNetwork = await xmtp.canMessage(accountAddress);
     console.log(`Can message: ${isOnDevNetwork}`);
@@ -139,7 +139,7 @@ async function check_if_an_address_is_on_the_network(xmtp, accountAddress) {
 }
 
 //Start a new conversation
-async function start_a_new_conversation(xmtp, accountAddress) {
+async function newConversation(xmtp, accountAddress) {
   if (xmtp) {
     let conversation = await xmtp.conversations.newConversation(accountAddress);
     console.log(`Conversation created with ${accountAddress}`);

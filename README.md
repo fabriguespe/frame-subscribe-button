@@ -1,10 +1,11 @@
 # Subscribe Button Frame with XMTP Consent
 
-This tutorial will guide you through the process of creating a frame, the first opt-in message, and a subscribe button for consent confirmation using the XMTP network.
+This guide will walk you through creating a frame, opt-in message, and a subscribe button using XMTP for consent confirmation.
 
 <details>
 <summary><h3>Prerequisites</h3></summary>
-This guide will provide you with the initial steps necessary to embark on your journey.
+
+This guide will provide you with the initial steps necessary to for setting up your environment.
 
 #### Environment Variables
 
@@ -26,13 +27,13 @@ NEXT_PUBLIC_PROD_URL=your_url //the frame official url
 
 Remember to replace the values with your actual keys and URLs. Never share your `.env` file or its contents as it contains sensitive information.
 
-#### Setting Up with Ngrok
+#### Debugging in local with Ngrok
 
-To set up a localhost url that you can test with the [Frames Embeds Tool](https://warpcast.com/~/developers/embeds) you can use the servie Ngrok. Thi swill generate a public URL that forwards actions to your localhost.
+To set up a localhost url that you can test with the [Frames Embeds Tool](https://warpcast.com/~/developers/embeds) you can use the service Ngrok. This will generate a public URL that forwards actions to your localhost.
 
-1. [Signup up](ngrok.com) to grok.
+1. [Sign up](ngrok.com) to Ngrok.
 
-2. Example in OSX:
+2. Example on macOS:
 
 ```jsx
 brew install ngrok/ngrok/ngrok
@@ -45,16 +46,18 @@ ngrok http 3000
 This project uses several libraries that are specified in the `package.json` file. Here's a brief description of each:
 
 - `@xmtp/xmtp-js`: This is the XMTP SDK, used for interacting with the XMTP network.
-- `Neynar API`: Uses for getting the users data associadted with a Farcaster Id.
+- `Neynar API`: Used for retrieving the users' data associated with a Farcaster ID.
 - `@coinbase/onchainkit`: This library is used for interacting with the OnChainKit API.
 - `ethers`: This is a library for interacting with the Ethereum blockchain.
 - `xmtp-js-server`: This is a previous version of the XMTP JS SDK that is compatible with server-side operations.
 
 </details>
 
-### Step 1: Create a Frame
+---
 
-A frame is a container for your XMTP application, utilizing the `@coinbase/onchainkit` for metadata handling. For more information on OnChainKit, visit [Coinbase OnChainKit Documentation](https://github.com/coinbase/onchainkit). It's defined in the `app/page.tsx` file. Here's how to create it:
+### Step 1: Create the Frame Metadata
+
+A Farcaster [Frame](https://warpcast.notion.site/Farcaster-Frames-4bd47fe97dc74a42a48d3a234636d8c5) lets you turn any cast into an interactive app. A Frame is created with simple OpenGraph tags. In this example we are setting up the metadata using [Coinbase OnChainKit](https://github.com/coinbase/onchainkit).
 
 ```jsx
 import { getFrameMetadata } from '@coinbase/onchainkit';
@@ -93,7 +96,7 @@ This will render the XMTP frame with the Subscribe button
 
 ### Step 2: Create an API endpoint
 
-To set up an API route in Next.js for handling XMTP subscription requests, you'll need to create a new file in the `pages/api` directory. This file will contain the logic for your API endpoint. For example, to create an API route at `/api/frame`, you would create a file named `route.ts` inside a folder named `frame` within the `pages/api` directory. Here's a simple setup to get you started:
+To set up an API route in Next.js for handling XMTP subscription requests, you'll need to create a new file in the `pages/api` directory. This file will contain the logic for your API endpoint. For example, to create an API route at `/api/frame`with a file named `route.ts` inside a folder.
 
 Note: To utilize this function, we rely on Neynar APIs. In order to avoid rate limiting, please ensure that you have your own API KEY. Sign up [here](https://neynar.com).
 
@@ -112,11 +115,11 @@ export async function POST(req: NextRequest): Promise<Response> {
 
 ### Step 3: Extracting account address and button index
 
-According to the Farcaster Frames documentation, when a user clicks a button in a frame, Warpcast sends a POST request containing both trusted and untrusted data. For simplicity and security, we'll focus on using the untrusted data, which includes the user's `Farcaster ID` and the `button index`. Here's how you can modify your getResponse function to extract the account address and button index from the received data:
+When a user clicks a button in a frame, Warpcast sends a POST request containing both trusted and untrusted data. For simplicity and security, we'll focus on using the untrusted data, which includes the user's `Farcaster ID` and the `button index`. Here's how you can modify your `getResponse` function to extract the account address and button index from the received data,
 
-This is an axample request:
+This is an example payload after the user clicks the button:
 
-```json
+```jsx
 Frame Request: {
   untrustedData: {
     fid: 10952,
@@ -146,7 +149,7 @@ const user = data.users[0];
 accountAddress = user.verifications[0];
 ```
 
-### Step 3: Managing Frame State
+#### Managing Frame State
 
 1. Check if the user is already subscribed:
 
@@ -165,21 +168,21 @@ accountAddress = user.verifications[0];
 - Send a message to the user with a link for consent confirmation.
 - The button will return "Subscribed! Check your inbox for a confirmation link.
 
-### Step 3: Create the First Opt-In Message
+### Step 4: Create the First Opt-In Message
 
 The first opt-in message is sent when a user subscribes. This is handled in the app/api/frame/route.ts file:
 
 ```jsx
 // Initialize the wallet and client
-let wallet = await initialize_the_wallet();
-let client = await create_a_client(wallet);
+let wallet = await initializeWallet();
+let client = await createXMTPClient(wallet);
 // Check if the account address is on the network
-let isOnNetwork = await check_if_an_address_is_on_the_network(client, accountAddress);
-if (isOnNetwork) {
+let isOnNetwork = await checkAddressIsOnNetwork(client, accountAddress);
+if (isOnNetwork === true) {
   // Start a new conversation and send a message
-  let conversation = await start_a_new_conversation(client, accountAddress);
+  let conversation = await newConversation(client, accountAddress);
   returnMessage = 'Subscribed! Check your inbox for a confirmation link.';
-  send_a_message(
+  sendMessage(
     conversation,
     `You're almost there! If you're viewing this in an inbox with portable consent, simply click the "Accept" button below to complete your subscription and start receiving updates. If the button doesn't appear, please confirm your consent by visiting the following link:\n
     ${apiUrl}/consent\n
@@ -229,13 +232,15 @@ const handleClick = async () => {
 };
 ```
 
-### Step 4: Run the Frame in localhost
+### Development
+
+To run this frame in localhost run the following. Remember to replace all your `.env` variables.
 
 ```bash
 yarn install
 yarn dev
 ```
 
-## Acknowledgements
+### Acknowledgements
 
 Special thanks to [Leonardo Zizzamia](https://github.com/Zizzamia) for providing the starter code with [A Frame in 100 Lines](https://github.com/Zizzamia/a-frame-in-100-lines).
