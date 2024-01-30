@@ -3,9 +3,7 @@
 This tutorial will guide you through the process of creating a frame, the first opt-in message, and a subscribe button for consent confirmation using the XMTP (Cross Messaging Transaction Protocol) framework.
 
 <details>
-<summary>Prerequisites</summary>
-
-## Prerequisites
+<summary> ### Prerequisites</summary>
 
 #### Environment Variables
 
