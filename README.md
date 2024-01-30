@@ -4,11 +4,11 @@ This tutorial will guide you through the process of creating a frame, the first 
 
 ## Prerequisites
 
-### Setting Up with Ngrok
+#### Setting Up with Ngrok
 
-To set up a localhost url that you can test with the [Frames Debugger](https://warpcast.com/~/developers/embeds) you can use the servie Ngrok. Thi swill generate a public URL that forwards actions to your localhost.
+To set up a localhost url that you can test with the [Frames Embeds Tool](https://warpcast.com/~/developers/embeds) you can use the servie Ngrok. Thi swill generate a public URL that forwards actions to your localhost.
 
-First Signup up to grok
+First [Signup up](ngrok.com) to grok
 
 OSX:
 
@@ -28,17 +28,16 @@ import type { Metadata } from 'next';
 
 const frameMetadata = getFrameMetadata({
   buttons: ['Subscribe via XMTP'],
-  image: 'https://xmtp-frame-subscribe-button.vercel.app/banner.jpeg',
-  post_url: ' https://amazed-hedgehog-actual.ngrok-free.app/api/frame',
+  image: process.env.NEXT_PUBLIC_IMAGES_URL + '/banner.jpeg',
+  post_url: process.env.NEXT_PUBLIC_API_URL + '/api/frame',
 });
-
 export const metadata: Metadata = {
   title: 'XMTP.org',
   description: 'LFG',
   openGraph: {
     title: 'XMTP.org',
     description: 'LFG',
-    images: ['https://xmtp-frame-subscribe-button.vercel.app/banner.jpeg'],
+    images: [process.env.NEXT_PUBLIC_IMAGES_URL+'/banner.jpeg'],
   },
   other: {
     ...frameMetadata,
@@ -156,5 +155,6 @@ export function Consent() {
 ### Step 4: Run the Application
 
 ```bash
+yarn install
 yarn dev
 ```
