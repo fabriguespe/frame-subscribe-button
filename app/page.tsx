@@ -8,10 +8,13 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 const apiUrl = isDevelopment ? process.env.NEXT_PUBLIC_NGROK_URL : process.env.NEXT_PUBLIC_PROD_URL;
 
 const frameMetadata = getFrameMetadata({
-  buttons: ['Subscribe via XMTP'],
+  buttons: [{ label: 'Click to subscribe', action: 'post' }],
   image: process.env.NEXT_PUBLIC_PROD_URL + '/banner.jpeg',
   post_url: apiUrl + '/api/frame',
+  refresh_period: 600, // 1 week
 });
+
+console.log('frameMetadata', frameMetadata);
 export const metadata: Metadata = {
   title: 'XMTP.org',
   description: 'LFG',

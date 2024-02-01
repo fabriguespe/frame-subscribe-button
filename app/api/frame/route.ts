@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import fetch from 'node-fetch';
 import { Wallet } from 'ethers';
 import { Client } from '@xmtp/xmtp-js';
+import { FrameRequest, getFrameAccountAddress, getFrameMessage } from '@coinbase/onchainkit';
 import { createClient } from 'redis';
 
 // Detect if we are in development
@@ -13,83 +14,73 @@ const redisClient = createClient({
   url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
   password: process.env.REDIS_PASSWORD, // Assuming your password is stored in an environment variable
 });
+
 await redisClient.connect();
 await redisClient.flushDb();
-console.log(`Is development: ${isDevelopment} - ${apiUrl}`);
+
 // Function to handle the response
 async function getResponse(req: NextRequest): Promise<NextResponse> {
   // Initialize variables
   let accountAddress = '';
   let returnMessage = '';
+  let buttonIndex = 1;
+  console.log('entra');
   try {
-    // Parse the request body
-    /*try {
-      // Step 2. Read the body from the Next Request
-      const body: FrameRequest = await req.json();
-      console.log('Frame Request:', body);
-      // Step 3. Get from the body the Account Address of the user using the Frame
-      accountAddress = await getFrameAccountAddress(body, {
+    // Step 2. Read the body from the Next Request
+    const body: FrameRequest = await req.json();
+    const fid = body.untrustedData?.fid;
+    buttonIndex = body.untrustedData?.buttonIndex;
+    console.log('buttonIndex:', buttonIndex);
+    console.log('Farcaster Id:', fid);
+
+    // Step 3. Validate the message
+    const { isValid, message } = await getFrameMessage(body);
+    // Step 4. Determine the experience based on the validity of the message
+    if (isValid) {
+      // Step 5. Get from the message the Account Address of the user using the Frame
+      accountAddress = await getFrameAccountAddress(message, {
+        //NEYNAR_API_KEY: 'NEYNAR_ONCHAIN_KIT',
         NEYNAR_API_KEY: process.env.NEYNAR_API_KEY as string,
       });
-    } catch (err) {
-      console.error(err);
-    }*/
 
-    console.log(`Account address: ${accountAddress}`);
-    const body: { untrustedData?: { fid?: number } } = await req.json();
-    const fid = body.untrustedData?.fid;
-    const buttonIndex = body.untrustedData?.buttonIndex;
-    if (fid) {
-      console.log('buttonIndex:', buttonIndex);
-      console.log('Farcaster Id:', fid);
-      // Fetch user data from the API
-      const response = await fetch(`https://api.neynar.com/v2/farcaster/user/bulk?fids=${fid}`, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          api_key: process.env.NEYNAR_API_KEY as string,
-        },
-      });
-      // Parse the response data
-      const data = await response.json();
-      const user = data.users[0];
-      // Get the account address from the user verifications
-      accountAddress = user.verifications[0]; // Assuming the address is the first item in the 'verifications' array
       if (!accountAddress) returnMessage = 'No address found';
-      console.log(`Account address: ${accountAddress}`);
-      const isAlreadySubscribed = await redisClient.get(accountAddress);
-      console.log(`Is already subscribed: ${isAlreadySubscribed}`);
-      if (isAlreadySubscribed) {
-        returnMessage = 'You are already subscribed';
-      } else {
-        redisClient.set(accountAddress, 'subscribed');
-        // Initialize the wallet and client
-        let wallet = await initializeWallet();
-        let client = await createXMTPClient(wallet);
-        // Check if the account address is on the network
-        let isOnNetwork = await checkAddressIsOnNetwork(client, accountAddress);
-        if (isOnNetwork === true) {
-          // Start a new conversation and send a message
-          let conversation = await newConversation(client, accountAddress);
-          returnMessage = 'Subscribed! Check your inbox for a confirmation link.';
-          sendMessage(
-            conversation,
-            `You're almost there! If you're viewing this in an inbox with portable consent, simply click the "Accept" button below to complete your subscription and start receiving updates. If the button doesn't appear, please confirm your consent by visiting the following link:\n\n\n${apiUrl}/consent\n\nThis ensures your privacy and consent are respected. Thank you for joining us!`,
-          );
-        } else returnMessage = 'Address is not on the XMTP network. ';
-      }
+      //  console.log(`Account address: ${accountAddress}`);
+      //  const isAlreadySubscribed = false; // (await redisClient.get(accountAddress));
+      //  console.log(`Is already subscribed: ${isAlreadySubscribed}`);
+      // if (isAlreadySubscribed) {
+      //   returnMessage = 'You are already subscribed. Need to confirm?';
+      //  } else {
+      // Initialize the wallet and client
+      let wallet = await initializeWallet();
+      //let wallet = await initialize_the_wallet_from_key();
+      let client = await createXMTPClient(wallet);
+      redisClient.set(accountAddress, client?.address);
+      // Check if the account address is on the network
+      let isOnNetwork = await checkAddressIsOnNetwork(client, accountAddress);
+      if (isOnNetwork === true) {
+        // Start a new conversation and send a message
+        let conversation = await newConversation(client, accountAddress);
+        returnMessage = 'Subscribed! Continue to confirm';
+        sendMessage(
+          conversation,
+          `You're almost there! If you're viewing this in an inbox with portable consent, simply click the "Accept" button below to complete your subscription and start receiving updates. If the button doesn't appear, please confirm your consent by visiting the following link:\n\n\n${apiUrl}/consent\n\nThis ensures your privacy and consent are respected. Thank you for joining us!`,
+        );
+      } else returnMessage = 'Address is not on the XMTP network. ';
+      //}
     }
   } catch (err) {
     // Log any errors
     console.error(err);
   }
-  // Return the response
+
   return new NextResponse(`<!DOCTYPE html><html><head>
-    <meta property="fc:frame" content="vNext" />
-    <meta property="fc:frame:image" content="${process.env.NEXT_PUBLIC_PROD_URL}/banner.jpeg" />
-    <meta property="fc:frame:button:1" content="${returnMessage}" />
-    <meta property="fc:frame:post_url" content="${apiUrl}/api/frame" />
-  </head></html>`);
+  <meta property="fc:frame" content="vNext" />
+  <meta property="fc:frame:image" content="${process.env.NEXT_PUBLIC_PROD_URL}/banner.jpeg" />
+  <meta property="fc:frame:button:1" content="${returnMessage}" />
+  <meta property="fc:frame:post_url" content="${apiUrl}/api/redirect" />
+  <meta property="fc:frame:button:${buttonIndex}:action" content="post_redirect" />
+  <meta property="fc:frame:button:${buttonIndex}:post_redirect" content="${apiUrl}/api/redirect" />
+</head></html>`);
 }
 
 //Initialize the wallet
