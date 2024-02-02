@@ -15,6 +15,10 @@ const redisClient = createClient({
   password: process.env.REDIS_PASSWORD, // Assuming your password is stored in an environment variable
 });
 
+let wallet = await initializeWallet();
+//let wallet = await initialize_the_wallet_from_key();
+let client = await createXMTPClient(wallet);
+
 await redisClient.connect();
 await redisClient.flushDb();
 
@@ -44,29 +48,26 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
       });
 
       if (!accountAddress) returnMessage = 'No address found';
-      //  console.log(`Account address: ${accountAddress}`);
-      //  const isAlreadySubscribed = false; // (await redisClient.get(accountAddress));
-      //  console.log(`Is already subscribed: ${isAlreadySubscribed}`);
-      // if (isAlreadySubscribed) {
-      //   returnMessage = 'You are already subscribed. Need to confirm?';
-      //  } else {
-      // Initialize the wallet and client
-      let wallet = await initializeWallet();
-      //let wallet = await initialize_the_wallet_from_key();
-      let client = await createXMTPClient(wallet);
-      redisClient.set(accountAddress, client?.address);
-      // Check if the account address is on the network
-      let isOnNetwork = await checkAddressIsOnNetwork(client, accountAddress);
-      if (isOnNetwork === true) {
-        // Start a new conversation and send a message
-        let conversation = await newConversation(client, accountAddress);
-        returnMessage = 'Subscribed! Continue to confirm';
-        sendMessage(
-          conversation,
-          `You're almost there! If you're viewing this in an inbox with portable consent, simply click the "Accept" button below to complete your subscription and start receiving updates. If the button doesn't appear, please confirm your consent by visiting the following link:\n\n\n${apiUrl}/consent\n\nThis ensures your privacy and consent are respected. Thank you for joining us!`,
-        );
-      } else returnMessage = 'Address is not on the XMTP network. ';
-      //}
+      console.log(`Account address: ${accountAddress}`);
+      const isAlreadySubscribed = false; // (await redisClient.get(accountAddress));
+      console.log(`Is already subscribed: ${isAlreadySubscribed}`);
+      if (isAlreadySubscribed) {
+        returnMessage = 'You are already subscribed. Need to confirm?';
+      } else {
+        // Initialize the wallet and client
+        redisClient.set(accountAddress, client?.address);
+        // Check if the account address is on the network
+        let isOnNetwork = await checkAddressIsOnNetwork(client, accountAddress);
+        if (isOnNetwork === true) {
+          // Start a new conversation and send a message
+          let conversation = await newConversation(client, accountAddress);
+          returnMessage = 'Subscribed! Continue to confirm';
+          sendMessage(
+            conversation,
+            `You're almost there! If you're viewing this in an inbox with portable consent, simply click the "Accept" button below to complete your subscription and start receiving updates. If the button doesn't appear, please confirm your consent by visiting the following link:\n\n\n${apiUrl}/consent\n\nThis ensures your privacy and consent are respected. Thank you for joining us!`,
+          );
+        } else returnMessage = 'Address is not on the XMTP network. ';
+      }
     }
   } catch (err) {
     // Log any errors
