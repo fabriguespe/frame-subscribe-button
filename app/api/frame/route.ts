@@ -28,7 +28,6 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
   let accountAddress = '';
   let returnMessage = '';
   let buttonIndex = 1;
-  console.log('entra');
   try {
     // Step 2. Read the body from the Next Request
     const body: FrameRequest = await req.json();

@@ -1,19 +1,27 @@
-'use client';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { GetServerSideProps } from 'next';
+import React from 'react';
 
-export default function RedirectPage() {
-  const router = useRouter();
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const conversation = context.query.conversation;
 
-  useEffect(() => {
-    const conversation = new URLSearchParams(window.location.search).get('conversation');
-    console.log('conversation', conversation);
-    if (conversation?.length > 10) {
-      let redirectUrl = `https://app.converse.xyz/dm/${conversation}`;
-      //let redirectUrl = `https://alpha.xmtp.chat/dm/${conversation}`;
-      console.log('redirectUrl', redirectUrl);
-      router.push(redirectUrl);
-    } else {
-    }
-  }, [router]);
-}
+  if (conversation && conversation.length > 10) {
+    let redirectUrl = `https://app.converse.xyz/dm/${conversation}`;
+    return {
+      redirect: {
+        destination: redirectUrl,
+        permanent: false,
+      },
+    };
+  }
+
+  return {
+    redirect: {
+      destination: '/',
+      permanent: false,
+    },
+  };
+};
+
+// Minimal React component that satisfies Next.js's requirement
+const RedirectPage = () => null;
+export default RedirectPage;
